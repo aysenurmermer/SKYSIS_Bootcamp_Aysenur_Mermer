@@ -1,0 +1,69 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <MPU6050_tockn.h>
+
+#define BUTTON_PIN 2  // Düğme pinini ayarlayın
+
+LiquidCrystal_I2C lcd(0x27, 20, 4);  // Adres 0x27, 20 sütun, 4 satır
+MPU6050 mpu6050(Wire);
+
+long timer = 0;  
+unsigned long delayTime;
+bool lastButtonState = HIGH;  // "pull-up" direnci nedeniyle varsayılan durum HIGH
+
+void setup() {
+  Serial.begin(9600);
+  lcd.init();  // LCD ekranını başlat
+
+  Serial.println("MPU6050 test");
+
+  Wire.begin();
+  mpu6050.begin();
+  
+  pinMode(BUTTON_PIN, INPUT_PULLUP);  // "pull-up" direnci etkinleştirildi
+  lcd.println("Press the button!");
+  delay(1000);
+}
+
+void loop() {
+  // Düğme durumunu oku
+  int reading = digitalRead(BUTTON_PIN);
+
+  // Düğme durumunu kontrol et
+  if (reading != lastButtonState) {
+    // Düğme basıldığında veya bırakıldığında bir eylem gerçekleştir
+    if (reading == LOW) {
+      // Düğme basıldığında LCD ekranı temizle
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Button Pressed!");
+      delay(1000);
+    }
+  }
+
+  lastButtonState = reading;
+
+  // MPU6050 sensöründen veri oku
+  mpu6050.update();
+
+  // LCD ekranına sensör verilerini yazdır
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Temp: ");
+  lcd.print(mpu6050.getTemp());
+  lcd.print("C");
+
+  lcd.setCursor(0, 1);
+  lcd.print("AccX: ");
+  lcd.print(mpu6050.getAccX());
+
+  lcd.setCursor(0, 2);
+  lcd.print("AccY: ");
+  lcd.print(mpu6050.getAccY());
+
+  lcd.setCursor(0, 3);
+  lcd.print("AccZ: ");
+  lcd.print(mpu6050.getAccZ());
+
+  delay(500);
+}
